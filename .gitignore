@@ -1,2 +1,3 @@
 node_modules/
 max-auth.json
+.env
