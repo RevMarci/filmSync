@@ -1,13 +1,13 @@
-require("dotenv").config();
-
-class TMDB {
+class TMDBAPI {
     constructor() {
         this.baseUrl = "https://api.themoviedb.org/3";
-        this.token = process.env.TMDB_TOKEN;
     }
 
     async request(endpoint, params = {}) {
-        console.log("Token: " + process.env.TMDB_TOKEN);
+        const token = process.env.TMDB_TOKEN;
+
+        console.log(`Makeing tmdb request to ${endpoint}, at ${Date.now()}`)
+        console.log(`Token: ${token}`);
         const url = new URL(`${this.baseUrl}${endpoint}`);
 
         for (const [key, value] of Object.entries(params)) {
@@ -20,7 +20,7 @@ class TMDB {
             method: "GET",
             headers: {
                 accept: "application/json",
-                Authorization: `Bearer ${this.token}`,
+                Authorization: `Bearer ${token}`,
             },
         });
 
@@ -33,17 +33,18 @@ class TMDB {
         return response.json();
     }
 
-    async discoverMovies(params = {}) {
+    async discoverMovies(providerID, params = {}) {
+        const discoverMovieEndpoint = "/discover/movie";
+
         const defaultParams = {
             include_adult: true,
             include_video: true,
-            language: "en-US",
             sort_by: "original_title.asc",
             watch_region: "HU",
-            with_watch_providers: "1899",
+            with_watch_providers: providerID,
         };
 
-        const firstPage = await this.request("/discover/movie", {
+        const firstPage = await this.request(discoverMovieEndpoint, {
             ...defaultParams,
             ...params,
             page: 1,
@@ -52,7 +53,7 @@ class TMDB {
         const movies = [...firstPage.results];
 
         for (let page = 2; page <= firstPage.total_pages; page++) {
-            const response = await this.request("/discover/movie", {
+            const response = await this.request(discoverMovieEndpoint, {
                 ...defaultParams,
                 ...params,
                 page,
@@ -84,4 +85,4 @@ class TMDB {
     }
 }
 
-module.exports = new TMDB();
+export default new TMDBAPI();

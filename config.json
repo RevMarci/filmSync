@@ -1,0 +1,10 @@
+{
+    "activeScrapers": ["hbo"],
+    "scrapers" : [
+        {
+            "id": "hbo",
+            "class": "HBOScraper",
+            "providerID": 1899
+        }
+    ]
+}

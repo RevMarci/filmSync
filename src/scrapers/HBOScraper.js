@@ -1,8 +1,19 @@
-const { chromium } = require("playwright");
+import { chromium } from "playwright";
+import BaseScraper from "./BaseScraper.js";
+import TMDBMovieList from "../tmdb/TMDBMovieList.js";
 
-class HBOScraper {
+export default class HBOScraper extends BaseScraper {
     constructor() {
+        super();
         this.isScraping = false;
+    }
+
+    get id() {
+        return 'hbo';
+    }
+
+    get providerID() {
+        return 1899;
     }
 
     async scrapeList() {
@@ -15,12 +26,13 @@ class HBOScraper {
         let browser;
 
         try {
+            console.log("Open chromium");
             browser = await chromium.launch({
                 headless: false,
             });
 
             const context = await browser.newContext({
-                storageState: "scrapersContext/max-auth.json",
+                storageState: "src/scrapersContext/max-auth.json",
             });
 
             const page = await context.newPage();
@@ -42,6 +54,9 @@ class HBOScraper {
                     scrollY: window.scrollY,
                 }));
 
+                console.log(`Scrolled to: ${info.scrollY}`);
+
+                // TODO: needs better check
                 if (info.scrollY % 1 !== 0) break;
             }
 
@@ -93,6 +108,17 @@ class HBOScraper {
     toSelector(classNames) {
         return "." + classNames.trim().split(/\s+/).join(".");
     }
-}
 
-module.exports = new HBOScraper();
+    async pairWithTMDB() {
+        console.log("Start hbo scraping");
+        const scrapedItems = await this.scrapeList();
+        console.log("Scraping finished, start marking");
+        for (const item of scrapedItems) {
+            const match = TMDBMovieList.findByTitle(item.title, item.year);
+      
+            if (match) {
+                match.markAsInList();
+            }
+        }
+    }
+}
